@@ -49,14 +49,14 @@ model User {
 
 model Session {
   id        String   @id @default(cuid())
-  userId    String
+  userId    String?
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
   ipAddress String?
   userAgent String?
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("sessions")
 }
@@ -70,7 +70,7 @@ model OtpCode {
   verified  Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("otp_codes")
 }
@@ -198,7 +198,7 @@ model Booking {
   cancelledAt DateTime?
 
   // Relations
-  user    User             @relation(fields: [userId], references: [id])
+  user    User?            @relation(fields: [userId], references: [id])
   profile TravelerProfile? @relation(fields: [profileId], references: [id])
   agent   Agent?           @relation(fields: [agentId], references: [id])
   company Company?         @relation(fields: [companyId], references: [id])
@@ -220,7 +220,7 @@ model Booking {
 
 model FlightBooking {
   id            String   @id @default(cuid())
-  bookingId     String
+  bookingId     String?
   airlineCode   String
   flightNumber  String
   departure     String // Airport code
@@ -235,7 +235,7 @@ model FlightBooking {
   seatNumbers   Json? // Array of seat assignments
   baggage       Json? // Baggage allowance details
 
-  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@map("flight_bookings")
 }
@@ -415,7 +415,7 @@ model UserPreference {
   key      String
   value    String
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, category, key])
   @@map("user_preferences")

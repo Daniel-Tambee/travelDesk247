@@ -38,10 +38,11 @@ export class AuthService implements IAuth {
     const session = await this.db.session.create({
       data: {
         token: token,
-        userId: userId,
+        // userId: userId,
         expiresAt: new Date(Date.now() + 3600000), // 1 hour from now
       },
     });
+
     return token;
   }
 
