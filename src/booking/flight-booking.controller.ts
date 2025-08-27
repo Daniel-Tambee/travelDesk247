@@ -103,26 +103,42 @@ export class FlightBookingController {
     filter?: { field?: keyof FlightBooking; value?: string } | string,
   ): Promise<FlightBooking[]> {
     try {
-      console.log(filter);
-
       let whereClause: any = {};
 
-      // Handle the search/filter logic
       if (filter) {
         try {
-          const searchObj =
+          const parsedFilter =
             typeof filter === 'string' ? JSON.parse(filter) : filter;
-          if (searchObj.field && searchObj.value) {
-            whereClause[searchObj.field] = {
-              contains: searchObj.value,
-              mode: 'insensitive',
-            };
+
+          if (Array.isArray(parsedFilter)) {
+            whereClause.AND = parsedFilter
+              .filter((f) => f.field && f.value !== undefined)
+              .map((f) => {
+                if (Array.isArray(f.value)) {
+                  return { [f.field]: { in: f.value } };
+                }
+                switch (typeof f.value) {
+                  case 'string':
+                    return {
+                      [f.field]: { contains: f.value, mode: 'insensitive' },
+                    };
+                  case 'number':
+                    return { [f.field]: { equals: Number(f.value) } };
+                  case 'boolean':
+                    return { [f.field]: { equals: f.value } };
+                  default:
+                    return {};
+                }
+              });
           }
         } catch (error) {
-          // Handle invalid JSON or use filter directly if it's a string
-          // You could also search across default fields here
+          this.flightBookingService.logger.error(
+            'Invalid search filter',
+            error,
+          );
         }
       }
+
       const options: FindAllOptions<FlightBooking> = {
         page,
         limit,
