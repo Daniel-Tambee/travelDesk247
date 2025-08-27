@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Query } from '@nestjs/common';
 import { FlightBooking } from '@prisma/client';
 import { BaseDto } from 'lib/BaseDto';
 import { BaseUpdateDto } from 'lib/BaseUpdateDto';
@@ -100,7 +100,8 @@ export class FlightBookingService
 
       // Handle filters with parsing
       if (options?.filters) {
-        queryOptions.where = this.parseFilters(options.filters);
+        queryOptions.where = options.filters;
+        console.log(queryOptions.where);
       }
 
       // Handle sorting
@@ -109,6 +110,7 @@ export class FlightBookingService
           [options.sort.field]: options.sort.order,
         };
       }
+      console.log(queryOptions.filter);
 
       const flightBookings = await this.db.flightBooking.findMany(queryOptions);
 

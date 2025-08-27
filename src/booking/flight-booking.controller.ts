@@ -26,6 +26,7 @@ import { FlightBooking } from '@prisma/client';
 import { BaseDto } from 'lib/BaseDto';
 import { BaseUpdateDto } from 'lib/BaseUpdateDto';
 import { FindAllOptions } from 'lib/FindAllOptions';
+import { SearchDto } from './SearchDto';
 
 @ApiTags('flight-bookings')
 @Controller('flight-bookings')
@@ -87,13 +88,41 @@ export class FlightBookingController {
     enum: ['asc', 'desc'],
     description: 'Sort order',
   })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'search by value',
+    type: Object,
+  })
   async findAll(
     @Query('page') page?: number,
     @Query('limit') limit?: number,
     @Query('sortField') sortField?: keyof FlightBooking,
     @Query('sortOrder') sortOrder?: 'asc' | 'desc',
+    @Query('search')
+    filter?: { field?: keyof FlightBooking; value?: string } | string,
   ): Promise<FlightBooking[]> {
     try {
+      console.log(filter);
+
+      let whereClause: any = {};
+
+      // Handle the search/filter logic
+      if (filter) {
+        try {
+          const searchObj =
+            typeof filter === 'string' ? JSON.parse(filter) : filter;
+          if (searchObj.field && searchObj.value) {
+            whereClause[searchObj.field] = {
+              contains: searchObj.value,
+              mode: 'insensitive',
+            };
+          }
+        } catch (error) {
+          // Handle invalid JSON or use filter directly if it's a string
+          // You could also search across default fields here
+        }
+      }
       const options: FindAllOptions<FlightBooking> = {
         page,
         limit,
@@ -104,7 +133,10 @@ export class FlightBookingController {
               order: sortOrder,
             },
           }),
+        filters: whereClause,
       };
+      console.log(options);
+
       return await this.flightBookingService.findAll(options);
     } catch (error) {
       this.flightBookingService.logger.error(
